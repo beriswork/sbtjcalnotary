@@ -1,0 +1,11 @@
+
+.number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #0052CC;
+  transition: all 0.3s ease;
+}
+
+.number.updating {
+  transform: scale(1.1);
+} 

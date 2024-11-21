@@ -1,0 +1,156 @@
+.container {
+  min-height: 100vh;
+  background-color: #f4f4f4;
+  padding: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.chartCard {
+  grid-column: span 2;
+  height: 400px;
+}
+
+.activityCard {
+  grid-column: span 2;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.icon {
+  font-size: 2rem;
+  color: #0052CC;
+  margin-bottom: 1rem;
+}
+
+.activityFeed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.activity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status.credit {
+  background-color: #0052CC;
+}
+
+.status.signup {
+  background-color: #00875A;
+}
+
+.status.login {
+  background-color: #FF991F;
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #0052CC;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.logoutButton:hover {
+  background-color: #003d99;
+}
+
+/* Auth styles */
+.authContainer {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f4f4f4;
+}
+
+.authCard {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.passwordInput {
+  position: relative;
+}
+
+.eyeButton {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #0052CC;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submitButton:hover {
+  background-color: #003d99;
+}
+
+.error {
+  color: #dc3545;
+  margin-top: 0.5rem;
+  text-align: center;
+} 
