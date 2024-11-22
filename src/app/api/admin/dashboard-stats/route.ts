@@ -20,8 +20,13 @@ const formatActivityMessage = (activity: any) => {
 
 export async function GET() {
   try {
+    console.log('[Admin Dashboard] Attempting database connection...');
     await dbConnect();
     console.log('[Admin Dashboard] Connected to MongoDB');
+
+    // Add timestamp to track when updates happen
+    const requestTime = new Date().toISOString();
+    console.log(`[Admin Dashboard] Processing request at: ${requestTime}`);
 
     // Get total users
     const totalUsers = await User.countDocuments({
@@ -132,11 +137,26 @@ export async function GET() {
       }
     };
 
-    console.log('[Admin Dashboard] Successfully compiled stats');
+    console.log('[Admin Dashboard] Stats compiled:', {
+      totalUsers,
+      activeUsers,
+      todayRequests,
+      monthlyRequests,
+      recentActivitiesCount: recentActivities.length
+    });
+
     return NextResponse.json(response);
 
   } catch (error) {
     console.error('[Admin Dashboard] Error:', error);
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error('[Admin Dashboard] Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to fetch dashboard stats' },
       { status: 500 }

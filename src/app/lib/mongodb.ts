@@ -1,51 +1,57 @@
-import mongoose, { Connection } from 'mongoose';
+import mongoose from 'mongoose';
 
-interface CachedConnection {
-  conn: Connection | null;
-  promise: Promise<Connection> | null;
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI environment variable inside .env');
 }
 
-const cached: CachedConnection = {
-  conn: null,
-  promise: null,
-};
+interface CachedConnection {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
 
-export async function connectToDatabase(): Promise<Connection> {
+declare global {
+  var mongoose: CachedConnection;
+}
+
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = {
+    conn: null,
+    promise: null
+  };
+}
+
+async function dbConnect() {
   if (cached.conn) {
+    console.log('Using cached MongoDB connection');
     return cached.conn;
-  }
-
-  if (!process.env.MONGODB_URI) {
-    throw new Error('Please define the MONGODB_URI environment variable');
   }
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: true,
+      bufferCommands: false,
       maxPoolSize: 10,
     };
 
-    try {
-      console.log('Connecting to MongoDB...');
-      // Create a new promise that explicitly returns a Connection
-      cached.promise = mongoose.connect(process.env.MONGODB_URI, {
-        ...opts,
-        dbName: process.env.MONGODB_DB || 'notary_calculator',
-      }).then(() => mongoose.connection);
-      
-    } catch (error) {
-      console.error('MongoDB connection error:', error);
-      throw error;
-    }
+    console.log('Connecting to MongoDB...');
+    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongooseInstance) => {
+      console.log('MongoDB connected successfully');
+      return mongooseInstance;
+    }) as Promise<typeof mongoose>;
   }
 
   try {
     cached.conn = await cached.promise;
-    return cached.conn;
-  } catch (error) {
-    console.error('Error resolving MongoDB connection:', error);
-    throw error;
+  } catch (e) {
+    cached.promise = null;
+    console.error('MongoDB connection error:', e);
+    throw e;
   }
+
+  return cached.conn;
 }
 
-export default connectToDatabase; 
+export default dbConnect; 
