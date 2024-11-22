@@ -60,7 +60,7 @@ body {
   color: #333333;
   margin: 0;
   padding: 0;
-  background-color: var(--background-color);
+  background-color: #ffffff;
 }
 
 /* Global class styles */
@@ -160,4 +160,16 @@ input {
 
 input::placeholder {
   color: #b5b5b5;
+}
+
+@layer utilities {
+  .backdrop-blur {
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* Update the page container background */
+.pageContainer {
+  min-height: 100vh;
+  background-color: #ffffff;
 }

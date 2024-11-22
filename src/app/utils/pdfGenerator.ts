@@ -100,8 +100,14 @@ export const generatePDF = async (feeData: FeeData) => {
       URL.revokeObjectURL(url);
     }, 100);
 
+    return blob;
+
   } catch (error) {
     console.error('Error generating PDF:', error);
     alert('Failed to generate PDF. Please try again.');
   }
+};
+
+export const getLastGeneratedPdf = () => {
+  return null;
 }; 

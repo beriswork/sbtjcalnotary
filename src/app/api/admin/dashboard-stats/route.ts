@@ -12,7 +12,7 @@ const formatActivityMessage = (activity: any) => {
     case 'login':
       return `${email} logged into the system`;
     case 'credit':
-      return `${email} used 1 credit for distance calculation`;
+      return `${email} used 1 credit for distance calculation (${activity.creditsRemaining} remaining)`;
     default:
       return activity.action;
   }
@@ -21,18 +21,32 @@ const formatActivityMessage = (activity: any) => {
 export async function GET() {
   try {
     await dbConnect();
+    console.log('[Admin Dashboard] Connected to MongoDB');
 
     // Get total users
-    const totalUsers = await User.countDocuments();
+    const totalUsers = await User.countDocuments({
+      isAdmin: { $ne: true }
+    });
 
-    // Get monthly active users (users who logged in within the last 30 days)
+    // Calculate new users in last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+    
+    const newUsersLastWeek = await User.countDocuments({
+      createdAt: { $gte: sevenDaysAgo },
+      isAdmin: { $ne: true }
+    });
+
+    // Get monthly active users
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const activeUsers = await User.countDocuments({
-      lastLoginAt: { $gte: thirtyDaysAgo }
+      lastLoginAt: { $gte: thirtyDaysAgo },
+      isAdmin: { $ne: true }
     });
 
-    // Get today's requests (credit usage activities)
+    // Get today's requests
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayRequests = await Activity.countDocuments({
@@ -49,11 +63,13 @@ export async function GET() {
       createdAt: { $gte: monthStart }
     });
 
-    // Get user growth data for last 2 weeks
-    const twoWeeksAgo = new Date();
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    // Calculate user growth for last 2 weeks including today
+    const today2 = new Date();
+    today2.setHours(0, 0, 0, 0);
+    const twoWeeksAgo = new Date(today2);
+    twoWeeksAgo.setDate(today2.getDate() - 13); // -13 to include today
 
-    // Get all dates in the last 2 weeks
+    // Generate dates array including today
     const dates = Array.from({ length: 14 }, (_, i) => {
       const date = new Date(twoWeeksAgo);
       date.setDate(date.getDate() + i);
@@ -64,17 +80,23 @@ export async function GET() {
     const userGrowth = await User.aggregate([
       {
         $match: {
-          createdAt: { $gte: twoWeeksAgo }
+          createdAt: { $gte: twoWeeksAgo },
+          isAdmin: { $ne: true }
         }
       },
       {
         $group: {
           _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+            $dateToString: { 
+              format: "%Y-%m-%d", 
+              date: "$createdAt",
+              timezone: "America/Los_Angeles"
+            }
           },
           count: { $sum: 1 }
         }
-      }
+      },
+      { $sort: { _id: 1 } }
     ]);
 
     // Fill in missing dates with zero counts
@@ -83,32 +105,40 @@ export async function GET() {
       count: userGrowth.find(item => item._id === date)?.count || 0
     }));
 
-    // Get recent activities with better formatting
+    // Get recent activities
     const recentActivities = await Activity.find()
       .sort({ createdAt: -1 })
       .limit(20)
       .populate('user', 'email lastLoginAt');
 
-    return NextResponse.json({
-      totalUsers,
-      activeUsers,
-      todayRequests,
-      monthlyRequests,
-      userGrowth: growthData,
-      recentActivities: recentActivities.map(activity => ({
-        id: activity._id,
-        user: activity.user.email,
-        action: formatActivityMessage(activity),
-        timestamp: activity.createdAt,
-        type: activity.type,
-        lastLogin: activity.user.lastLoginAt,
-        creditsRemaining: activity.creditsRemaining
-      }))
-    });
+    const response = {
+      success: true,
+      data: {
+        totalUsers,
+        newUsersLastWeek,  // Add this to response
+        activeUsers,
+        todayRequests,
+        monthlyRequests,
+        userGrowth: growthData,
+        recentActivities: recentActivities.map(activity => ({
+          id: activity._id.toString(),
+          user: activity.user.email,
+          action: formatActivityMessage(activity),
+          timestamp: activity.createdAt,
+          type: activity.type,
+          lastLogin: activity.user.lastLoginAt,
+          creditsRemaining: activity.creditsRemaining
+        }))
+      }
+    };
+
+    console.log('[Admin Dashboard] Successfully compiled stats');
+    return NextResponse.json(response);
+
   } catch (error) {
-    console.error('Error fetching admin stats:', error);
+    console.error('[Admin Dashboard] Error:', error);
     return NextResponse.json(
-      { error: 'Error fetching admin stats' },
+      { success: false, error: 'Failed to fetch dashboard stats' },
       { status: 500 }
     );
   }

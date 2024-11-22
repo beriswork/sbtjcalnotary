@@ -3,10 +3,10 @@ import dbConnect from '@/app/lib/mongodb';
 import User from '@/app/models/User';
 import Activity from '@/app/models/Activity';
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
     await dbConnect();
-    const { email, password } = await req.json();
+    const { email, password } = await request.json();
 
     // Check if user exists
     const existingUser = await User.findOne({ email });

@@ -1,33 +1,76 @@
 .header {
   background-color: #FFFFFF;
-  padding: 20px 5%;
-  border-bottom: 1px solid #E0E0E0;
+  border-bottom: 1px solid #E5E7EB;
+  padding: 12px 0;
+}
+
+.headerContent {
+  max-width: 90%;
+  width: 90%;
+  margin: 0 auto;
+  padding: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+.titleSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.calculatorIcon {
+  font-size: 24px;
+  color: #0052CC;
+}
+
 .title {
   color: #0052CC;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   margin: 0;
 }
 
 .rightSection {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 .credits {
-  background-color: #FFF8E5;
-  color: #B7791F;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
   font-size: 14px;
-  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userEmail {
+  font-size: 14px;
+  color: #4B5563;
+  font-weight: 500;
+}
+
+.userIcon {
+  font-size: 20px;
+  color: #6B7280;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.userIcon:hover {
+  color: #374151;
+}
+
+/* Animation for credits update */
+.pulse {
   animation: pulse 0.3s ease-in-out;
 }
 
@@ -37,25 +80,12 @@
   100% { transform: scale(1); }
 }
 
-.userIcon {
-  font-size: 24px;
-  color: #4A5568;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.userIcon:hover {
-  color: #0052CC;
-}
-
-/* Mobile styles */
-@media screen and (max-width: 768px) {
-  .header {
-    padding: 15px 4%;
-  }
-
-  .title {
-    display: none; /* Hide title on mobile */
+/* Responsive styles */
+@media (max-width: 768px) {
+  .headerContent {
+    padding: 0 16px;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .rightSection {
@@ -63,8 +93,15 @@
     justify-content: space-between;
   }
 
+  .title {
+    font-size: 18px;
+  }
+
   .credits {
-    font-size: 12px;
-    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .userEmail {
+    font-size: 13px;
   }
 } 

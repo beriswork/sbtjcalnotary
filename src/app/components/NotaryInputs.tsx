@@ -19,18 +19,16 @@ interface NotaryInputsProps {
 export const NotaryInputs = ({ onChange, values }: NotaryInputsProps) => {
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    
     console.log('NotaryInputs change:', {
       id: e.target.id,
       value
     });
-    
     onChange(e);
   };
 
   return (
     <div className={styles.calculatorSection}>
-      <h2>Notary Inputs</h2>
+      <h2>Cost Details</h2>
       <label>
         Fixed Stamp Fee ($)
         <input

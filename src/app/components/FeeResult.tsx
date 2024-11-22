@@ -1,67 +1,92 @@
 'use client';
 
+import { useState } from 'react';
 import { FeeData } from '../types';
 import { generatePDF } from '../utils/pdfGenerator';
+import { EmailPopup } from './EmailPopup';
 import styles from '../page.module.css';
 
-interface FeeResultProps {
-  feeData: FeeData | null;
-}
+export const FeeResult = ({ feeData }: { feeData: FeeData }) => {
+  const [showEmailPopup, setShowEmailPopup] = useState(false);
 
-export const FeeResult = ({ feeData }: FeeResultProps) => {
-  if (!feeData) return null;
-
-  const handleDownloadPDF = () => {
-    try {
-      console.log('Generating PDF with data:', feeData);
-      generatePDF(feeData);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
-    }
+  const handleShare = (email: string) => {
+    const mailtoLink = `mailto:${email}?subject=Notary Bill&body=Please find your notary bill details below:%0D%0A%0D%0ATotal Fees: $${feeData.totalFees.toFixed(2)}%0D%0A%0D%0ABreakdown:%0D%0A- Stamp Fees: $${feeData.stampFees.toFixed(2)}%0D%0A- Witness Fees: $${feeData.witnessFees.toFixed(2)}%0D%0A- Additional Signer Fees: $${feeData.addlSignerFees.toFixed(2)}%0D%0A- Travel Fees: $${feeData.totalTravelFees.toFixed(2)}%0D%0A- Appointment Time Fees: $${feeData.apptTimeFees.toFixed(2)}%0D%0A- Printing/Scanning Fees: $${feeData.printingScanningFees.toFixed(2)}`;
+    
+    window.location.href = mailtoLink;
   };
 
   return (
-    <div className={`${styles.resultContainer} show`}>
-      <h2>Total Fees: ${feeData.totalFees.toFixed(2)}</h2>
+    <div className={styles.resultContainer}>
+      <h2 className={styles.totalFees}>Total Fees: ${feeData.totalFees.toFixed(2)}</h2>
       <div className={styles.feeBreakdown}>
         <div className={styles.feeItem}>
-          <span className={styles.feeLabel}>Stamp Fees:</span>
-          <span>${feeData.stampFees.toFixed(2)}</span>
+          <span className={styles.feeLabel}>Stamp Fees</span>
+          <span className={styles.feeAmount}>${feeData.stampFees.toFixed(2)}</span>
         </div>
         <div className={styles.feeItem}>
-          <span className={styles.feeLabel}>Witness Fees:</span>
-          <span>${feeData.witnessFees.toFixed(2)}</span>
+          <span className={styles.feeLabel}>Witness Fees</span>
+          <span className={styles.feeAmount}>${feeData.witnessFees.toFixed(2)}</span>
         </div>
         <div className={styles.feeItem}>
-          <span className={styles.feeLabel}>Additional Signer Fees:</span>
-          <span>${feeData.addlSignerFees.toFixed(2)}</span>
+          <span className={styles.feeLabel}>Additional Signer Fees</span>
+          <span className={styles.feeAmount}>${feeData.addlSignerFees.toFixed(2)}</span>
         </div>
         <div className={styles.feeItem}>
-          <span className={styles.feeLabel}>Travel Fees:</span>
-          <span>${feeData.totalTravelFees.toFixed(2)}</span>
+          <div className={styles.feeLabelContainer}>
+            <span className={styles.feeLabel}>Travel Fees</span>
+            <span className={styles.feeAmount}>${feeData.totalTravelFees.toFixed(2)}</span>
+          </div>
           <div className={styles.feeSubitem}>
-            <span>Distance: ${feeData.travelDistanceFees.toFixed(2)}</span>
-            <span>Time: ${feeData.travelTimeFees.toFixed(2)}</span>
+            <div className={styles.feeSubitemRow}>
+              <div className={styles.feeSubitemDetail}>
+                <span>Distance:</span>
+                <span>${feeData.travelDistanceFees.toFixed(2)}</span>
+              </div>
+              <div className={styles.feeSubitemDetail}>
+                <span>Time:</span>
+                <span>${feeData.travelTimeFees.toFixed(2)}</span>
+              </div>
+            </div>
           </div>
         </div>
         <div className={styles.feeItem}>
-          <span className={styles.feeLabel}>Appointment Time Fees:</span>
-          <span>${feeData.apptTimeFees.toFixed(2)}</span>
+          <span className={styles.feeLabel}>Appointment Time Fees</span>
+          <span className={styles.feeAmount}>${feeData.apptTimeFees.toFixed(2)}</span>
         </div>
         <div className={styles.feeItem}>
-          <span className={styles.feeLabel}>Printing/Scanning Fees:</span>
-          <span>${feeData.printingScanningFees.toFixed(2)}</span>
+          <span className={styles.feeLabel}>Printing/Scanning Fees</span>
+          <span className={styles.feeAmount}>${feeData.printingScanningFees.toFixed(2)}</span>
         </div>
       </div>
-      <button onClick={handleDownloadPDF} className={styles.downloadButton}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
-        Download PDF
-      </button>
+
+      <div className={styles.actionButtons}>
+        <button
+          onClick={() => generatePDF(feeData)}
+          className={styles.downloadButton}
+        >
+          <svg className={styles.buttonIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Download PDF
+        </button>
+        
+        <button
+          onClick={() => setShowEmailPopup(true)}
+          className={styles.shareButton}
+        >
+          <svg className={styles.buttonIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+          </svg>
+          Share the bill with client
+        </button>
+      </div>
+
+      {showEmailPopup && (
+        <EmailPopup
+          onClose={() => setShowEmailPopup(false)}
+          onSubmit={handleShare}
+        />
+      )}
     </div>
   );
 }; 

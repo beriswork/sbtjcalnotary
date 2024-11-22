@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import styles from '../page.module.css';
-import { calculateDistance, convertToMinutes } from '../utils/calculatorUtils';
-import type { DistanceMatrixResponse } from '../types';
+import { calculateDistance } from '../utils/calculatorUtils';
 import { useAuth } from '../context/AuthContext';
 
 interface TravelDetailsProps {
@@ -16,8 +15,7 @@ export const TravelDetails = ({ onDistanceCalculated }: TravelDetailsProps) => {
   const [travelFee, setTravelFee] = useState<string>('');
   const [travelTime, setTravelTime] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
-
-  const { credits, decrementCredits } = useAuth();
+  const { credits, userEmail, decrementCredits } = useAuth();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -61,19 +59,33 @@ export const TravelDetails = ({ onDistanceCalculated }: TravelDetailsProps) => {
   }, []);
 
   const handleCalculateDistance = async () => {
-    if (!startLocationRef.current?.value || !destinationRef.current?.value) {
-      alert('Please enter both start location and destination.');
+    if (!userEmail) {
+      alert('User email not found. Please try logging in again.');
       return;
     }
 
     if (credits <= 0) {
-      alert('You\'ve exhausted your free credits. To get more credits, please email us at support@solutionsbytj.com');
+      alert('Your credits are exhausted. To recharge your credits, please email us at support@solutionsbytj.com');
+      return;
+    }
+
+    if (!startLocationRef.current?.value || !destinationRef.current?.value) {
+      alert('Please enter both start location and destination.');
       return;
     }
 
     setIsCalculating(true);
 
     try {
+      const creditResponse = await fetch(`/api/user/credits?email=${encodeURIComponent(userEmail)}`);
+      const creditData = await creditResponse.json();
+      
+      if (creditData.success && creditData.credits <= 0) {
+        alert('Your credits are exhausted. To recharge your credits, please email us at support@solutionsbytj.com');
+        setIsCalculating(false);
+        return;
+      }
+
       const response = await calculateDistance(
         startLocationRef.current.value,
         destinationRef.current.value
@@ -88,12 +100,29 @@ export const TravelDetails = ({ onDistanceCalculated }: TravelDetailsProps) => {
       const distanceInMiles = (element.distance.value / 1609.344).toFixed(2);
       const durationInMinutes = Math.ceil(element.duration.value / 60);
 
+      // Update UI
       setTravelFee(distanceInMiles);
       setTravelTime(durationInMinutes.toString());
-
       onDistanceCalculated(parseFloat(distanceInMiles), durationInMinutes);
-      
-      await decrementCredits();
+
+      // Update credits in backend and UI
+      const updateResponse = await fetch('/api/user/update-credits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail })
+      });
+
+      if (updateResponse.ok) {
+        const data = await updateResponse.json();
+        if (data.success) {
+          decrementCredits();
+          console.log(`[Credit Update] User: ${userEmail}, Credits remaining: ${data.newCredits}`);
+          
+          if (data.newCredits <= 0) {
+            alert('You have used all your credits. To recharge your credits, please email us at support@solutionsbytj.com');
+          }
+        }
+      }
 
       alert(
         `Distance: ${element.distance.text}\n` +
@@ -101,7 +130,7 @@ export const TravelDetails = ({ onDistanceCalculated }: TravelDetailsProps) => {
       );
 
     } catch (error) {
-      console.error('Error calculating distance:', error);
+      console.error('Error:', error);
       alert(error instanceof Error ? error.message : 'Error calculating distance. Please try again.');
     } finally {
       setIsCalculating(false);
@@ -118,6 +147,7 @@ export const TravelDetails = ({ onDistanceCalculated }: TravelDetailsProps) => {
           ref={startLocationRef}
           placeholder="Enter start location"
           className={styles.locationInput}
+          disabled={credits <= 0}
         />
       </label>
       <label>
@@ -127,14 +157,15 @@ export const TravelDetails = ({ onDistanceCalculated }: TravelDetailsProps) => {
           ref={destinationRef}
           placeholder="Enter destination"
           className={styles.locationInput}
+          disabled={credits <= 0}
         />
       </label>
       <button 
         onClick={handleCalculateDistance} 
-        className="secondary-button"
-        disabled={isCalculating}
+        className={`secondary-button ${credits <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={isCalculating || credits <= 0}
       >
-        {isCalculating ? 'Calculating...' : 'Calculate Distance and Time'}
+        {isCalculating ? 'Calculating...' : credits <= 0 ? 'No Credits Available' : 'Calculate Distance and Time'}
       </button>
       <label>
         Travel Fee (miles)
@@ -143,7 +174,8 @@ export const TravelDetails = ({ onDistanceCalculated }: TravelDetailsProps) => {
           id="travelFee"
           value={travelFee}
           readOnly
-          placeholder="Calculated miles"
+          placeholder={credits <= 0 ? 'Add credits to calculate' : 'Calculated miles'}
+          className={styles.numberInput}
         />
       </label>
       <label>
@@ -153,7 +185,8 @@ export const TravelDetails = ({ onDistanceCalculated }: TravelDetailsProps) => {
           id="travelTime"
           value={travelTime}
           readOnly
-          placeholder="Calculated time"
+          placeholder={credits <= 0 ? 'Add credits to calculate' : 'Calculated time'}
+          className={styles.numberInput}
         />
       </label>
     </div>

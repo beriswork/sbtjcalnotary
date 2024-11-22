@@ -11,6 +11,8 @@ import styles from '../page.module.css';
 import { FeeResult } from '../components/FeeResult';
 import { useAuth } from '../context/AuthContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { shareViaEmail } from '../utils/emailShare';
+import { getLastGeneratedPdf } from '../utils/pdfGenerator';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -168,6 +170,15 @@ export default function Dashboard() {
     window.feeData = newFeeData;
   };
 
+  const handleShare = () => {
+    const pdfBlob = getLastGeneratedPdf();
+    if (pdfBlob) {
+      shareViaEmail(pdfBlob);
+    } else {
+      alert('Please generate the bill first');
+    }
+  };
+
   useEffect(() => {
     const session = sessionStorage.getItem('user_session');
     if (session) {
@@ -179,7 +190,11 @@ export default function Dashboard() {
   }, []);
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
