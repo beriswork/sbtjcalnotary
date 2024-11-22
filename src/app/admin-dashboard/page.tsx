@@ -70,7 +70,7 @@ export default function AdminDashboard() {
   if (!stats) {
     return (
       <div className="fixed inset-0 bg-[#f9fafb] flex items-center justify-center">
-        <div className="text-gray-600">Failed to load dashboard data. Please refresh.</div>
+        <p className="text-gray-600">Failed to load dashboard data. Please refresh.</p>
       </div>
     );
   }

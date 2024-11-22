@@ -12,22 +12,19 @@ export const AnimatedNumber = ({ value, duration = 1000 }: AnimatedNumberProps) 
   const [displayValue, setDisplayValue] = useState(0);
 
   useEffect(() => {
-    let startTime: number | null = null;
-    const startValue = displayValue;
+    const difference = value - displayValue;
+    if (Math.abs(difference) < 0.1) {
+      setDisplayValue(value);
+      return;
+    }
 
-    const animate = (currentTime: number) => {
-      if (!startTime) startTime = currentTime;
-      const progress = Math.min((currentTime - startTime) / duration, 1);
+    const step = difference * 0.1;
+    const timeout = setTimeout(() => {
+      setDisplayValue(displayValue + step);
+    }, 16);
 
-      setDisplayValue(Math.floor(startValue + (value - startValue) * progress));
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-
-    requestAnimationFrame(animate);
-  }, [value, duration]);
+    return () => clearTimeout(timeout);
+  }, [value, displayValue]);
 
   return (
     <div className={styles.number}>

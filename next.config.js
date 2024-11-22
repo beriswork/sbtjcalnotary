@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true
-  }
+  // Clean config for Next.js 14
+  poweredByHeader: false,
+  reactStrictMode: true,
 }
 
 module.exports = nextConfig

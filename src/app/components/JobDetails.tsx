@@ -65,7 +65,7 @@ export const JobDetails = ({ onChange, values }: JobDetailsProps) => {
           className={styles.numberInput}
         />
       </label>
-      <label>
+      <label htmlFor="apptTime">
         Appt Time/Expertise (minutes)
         <input
           type="number"

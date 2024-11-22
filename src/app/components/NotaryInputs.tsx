@@ -29,7 +29,7 @@ export const NotaryInputs = ({ onChange, values }: NotaryInputsProps) => {
   return (
     <div className={styles.calculatorSection}>
       <h2>Cost Details</h2>
-      <label>
+      <label htmlFor="fixedStampFee">
         Fixed Stamp Fee ($)
         <input
           type="number"

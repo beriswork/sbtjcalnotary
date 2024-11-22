@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 
@@ -23,23 +23,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    const checkSession = () => {
-      if (typeof window !== 'undefined') {
-        const session = sessionStorage.getItem('user_session');
-        const authToken = Cookies.get('auth_token');
+  const refreshCredits = useCallback(async (email: string) => {
+    try {
+      const response = await fetch(`/api/user/credits?email=${encodeURIComponent(email)}`);
+      const data = await response.json();
+      if (data.success) {
+        setCredits(data.credits);
+      }
+    } catch (error) {
+      console.error('Error refreshing credits:', error);
+    }
+  }, []);
 
-        if (session && authToken) {
-          const { email, credits: savedCredits } = JSON.parse(session);
-          setIsAuthenticated(true);
-          setUserEmail(email);
-          setCredits(savedCredits);
-        }
+  useEffect(() => {
+    const checkSession = async () => {
+      const session = sessionStorage.getItem('user_session');
+      if (session) {
+        const { email } = JSON.parse(session);
+        setUserEmail(email);
+        await refreshCredits(email);
       }
     };
 
     checkSession();
-  }, []);
+  }, [refreshCredits]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -144,38 +151,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Add a function to refresh credits
-  const refreshCredits = async () => {
-    if (!userEmail) return;
-
-    try {
-      const response = await fetch('/api/user/credits', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail })
-      });
-
-      const data = await response.json();
-      if (data.credits !== undefined) {
-        setCredits(data.credits);
-        
-        // Update session storage
-        const session = JSON.parse(sessionStorage.getItem('user_session') || '{}');
-        session.credits = data.credits;
-        sessionStorage.setItem('user_session', JSON.stringify(session));
-      }
-    } catch (error) {
-      console.error('Error refreshing credits:', error);
-    }
-  };
-
   // Add an effect to periodically refresh credits
   useEffect(() => {
     if (isAuthenticated && userEmail) {
       const interval = setInterval(refreshCredits, 5000); // Refresh every 5 seconds
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, userEmail]);
+  }, [isAuthenticated, userEmail, refreshCredits]);
 
   return (
     <AuthContext.Provider value={{
