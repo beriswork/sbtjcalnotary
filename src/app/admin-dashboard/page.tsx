@@ -30,6 +30,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const adminSession = sessionStorage.getItem('admin_session');
@@ -69,6 +70,31 @@ export default function AdminDashboard() {
     router.push('/admin-login');
   };
 
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      console.log('🔄 [Admin Dashboard] Manual refresh triggered');
+      const response = await fetch('/api/admin/dashboard-stats');
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      const data = await response.json();
+      if (data.success) {
+        console.log('✅ [Admin Dashboard] Stats manually updated:', {
+          totalUsers: data.data.totalUsers,
+          activeUsers: data.data.activeUsers,
+          todayRequests: data.data.todayRequests,
+          monthlyRequests: data.data.monthlyRequests,
+          recentActivitiesCount: data.data.recentActivities.length,
+          userGrowthPoints: data.data.userGrowth.length
+        });
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('❌ [Admin Dashboard] Manual refresh error:', error);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -88,6 +114,42 @@ export default function AdminDashboard() {
           <div className={styles.headerContent}>
             <h1 className={styles.headerTitle}>Admin Panel</h1>
             <div className={styles.headerActions}>
+              <button 
+                onClick={handleManualRefresh}
+                className={styles.refreshButton}
+                style={{
+                  padding: '8px 16px',
+                  marginRight: '12px',
+                  background: '#0066ff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                disabled={isRefreshing}
+              >
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  style={{
+                    transform: isRefreshing ? 'rotate(360deg)' : 'none',
+                    transition: 'transform 0.5s ease',
+                    animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
+                  }}
+                >
+                  <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16" />
+                </svg>
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </button>
               <div className={styles.notificationWrapper}>
                 <button 
                   onClick={() => setShowNotifications(!showNotifications)}
@@ -257,6 +319,17 @@ export default function AdminDashboard() {
           </div>
         </main>
       </div>
+
+      <style jsx global>{`
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </ErrorBoundary>
   );
 } 
