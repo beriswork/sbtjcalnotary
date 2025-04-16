@@ -23,7 +23,7 @@ export default function Dashboard() {
   const [inputs, setInputs] = useState<CalculatorInputs>({
     fixedStampFee: 0,
     additionalStampFee: 0,
-    irsMileage: 0.67,
+    irsMileage: 0.70,
     hourlyRate: 0,
     witnessFee: 0,
     addlSignerFee: 0,
