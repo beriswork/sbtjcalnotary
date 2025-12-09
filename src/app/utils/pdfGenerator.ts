@@ -3,8 +3,32 @@ import { FeeData } from '../types';
 declare global {
   interface Window {
     jspdf: any;
+    jsPDF: any;
   }
 }
+
+// Store the last generated PDF blob
+let lastGeneratedPdfBlob: Blob | null = null;
+
+// Helper function to wait for jsPDF to load
+const waitForJsPDF = async (maxRetries = 20): Promise<any> => {
+  for (let i = 0; i < maxRetries; i++) {
+    // Check multiple possible locations where jsPDF might be exposed
+    if (window.jsPDF) {
+      return window.jsPDF;
+    }
+    if (window.jspdf?.jsPDF) {
+      return window.jspdf.jsPDF;
+    }
+    if ((window as any).jspdf) {
+      return (window as any).jspdf.jsPDF || (window as any).jspdf;
+    }
+    
+    console.log(`Waiting for jsPDF to load... attempt ${i + 1}/${maxRetries}`);
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+  throw new Error('PDF generation library failed to load. Please refresh the page and try again.');
+};
 
 export const generatePDF = async (feeData: FeeData) => {
   if (typeof window === 'undefined') {
@@ -13,17 +37,14 @@ export const generatePDF = async (feeData: FeeData) => {
   }
 
   try {
-    // Wait for jsPDF to be fully loaded
-    if (!window.jspdf) {
-      console.log('Waiting for jsPDF to load...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      if (!window.jspdf) {
-        throw new Error('PDF generation library not loaded');
-      }
+    // Wait for jsPDF to be fully loaded with retry mechanism
+    const jsPDFConstructor = await waitForJsPDF();
+    
+    if (!jsPDFConstructor) {
+      throw new Error('jsPDF constructor not found');
     }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDFConstructor();
 
     // Colors
     const primaryColor = [0, 82, 204];
@@ -87,6 +108,10 @@ export const generatePDF = async (feeData: FeeData) => {
 
     // Cross-browser compatible download
     const blob = doc.output('blob');
+    
+    // Store the blob for email sharing
+    lastGeneratedPdfBlob = blob;
+    
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -100,14 +125,17 @@ export const generatePDF = async (feeData: FeeData) => {
       URL.revokeObjectURL(url);
     }, 100);
 
+    console.log('PDF generated successfully!');
     return blob;
 
   } catch (error) {
     console.error('Error generating PDF:', error);
-    alert('Failed to generate PDF. Please try again.');
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate PDF. Please try again.';
+    alert(errorMessage);
+    throw error;
   }
 };
 
-export const getLastGeneratedPdf = () => {
-  return null;
+export const getLastGeneratedPdf = (): Blob | null => {
+  return lastGeneratedPdfBlob;
 }; 

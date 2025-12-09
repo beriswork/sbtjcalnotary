@@ -219,13 +219,24 @@ export default function Dashboard() {
         id="jspdf"
         strategy="afterInteractive"
         src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
-        onLoad={() => console.log('jsPDF loaded')}
+        onLoad={() => {
+          console.log('✅ jsPDF loaded successfully');
+          console.log('jsPDF available at:', typeof window.jsPDF !== 'undefined' ? 'window.jsPDF' : 'window.jspdf');
+        }}
+        onError={(e) => {
+          console.error('❌ Failed to load jsPDF:', e);
+        }}
       />
       <Script
         id="jspdf-autotable"
         strategy="afterInteractive"
         src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"
-        onLoad={() => console.log('jsPDF AutoTable loaded')}
+        onLoad={() => {
+          console.log('✅ jsPDF AutoTable plugin loaded successfully');
+        }}
+        onError={(e) => {
+          console.error('❌ Failed to load jsPDF AutoTable:', e);
+        }}
       />
       
       <main className={styles.main}>

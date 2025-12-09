@@ -2,15 +2,36 @@
 
 import { useState } from 'react';
 import { FeeData } from '../types';
-import { generatePDF } from '../utils/pdfGenerator';
+import { generatePDF, getLastGeneratedPdf } from '../utils/pdfGenerator';
 import { EmailPopup } from './EmailPopup';
 import styles from '../page.module.css';
 
 export const FeeResult = ({ feeData }: { feeData: FeeData }) => {
   const [showEmailPopup, setShowEmailPopup] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      await generatePDF(feeData);
+    } catch (error) {
+      console.error('Error in handleDownloadPdf:', error);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const handleShare = (email: string) => {
-    const mailtoLink = `mailto:${email}?subject=Notary Bill&body=Please find your notary bill details below:%0D%0A%0D%0ATotal Fees: $${feeData.totalFees.toFixed(2)}%0D%0A%0D%0ABreakdown:%0D%0A- Stamp Fees: $${feeData.stampFees.toFixed(2)}%0D%0A- Witness Fees: $${feeData.witnessFees.toFixed(2)}%0D%0A- Additional Signer Fees: $${feeData.addlSignerFees.toFixed(2)}%0D%0A- Travel Fees: $${feeData.totalTravelFees.toFixed(2)}%0D%0A- Appointment Time Fees: $${feeData.apptTimeFees.toFixed(2)}%0D%0A- Printing/Scanning Fees: $${feeData.printingScanningFees.toFixed(2)}`;
+    const pdfBlob = getLastGeneratedPdf();
+    
+    if (!pdfBlob) {
+      alert('Please generate the PDF first by clicking "Download PDF" button.');
+      setShowEmailPopup(false);
+      return;
+    }
+
+    // Create a detailed email with bill information
+    const mailtoLink = `mailto:${email}?subject=Notary Bill&body=Please find your notary bill details below:%0D%0A%0D%0ATotal Fees: $${feeData.totalFees.toFixed(2)}%0D%0A%0D%0ABreakdown:%0D%0A- Stamp Fees: $${feeData.stampFees.toFixed(2)}%0D%0A- Witness Fees: $${feeData.witnessFees.toFixed(2)}%0D%0A- Additional Signer Fees: $${feeData.addlSignerFees.toFixed(2)}%0D%0A- Travel Fees: $${feeData.totalTravelFees.toFixed(2)}%0D%0A- Appointment Time Fees: $${feeData.apptTimeFees.toFixed(2)}%0D%0A- Printing/Scanning Fees: $${feeData.printingScanningFees.toFixed(2)}%0D%0A%0D%0ANote: Please download the PDF and attach it manually to this email.`;
     
     window.location.href = mailtoLink;
   };
@@ -61,13 +82,18 @@ export const FeeResult = ({ feeData }: { feeData: FeeData }) => {
 
       <div className={styles.actionButtons}>
         <button
-          onClick={() => generatePDF(feeData)}
+          onClick={handleDownloadPdf}
           className={styles.downloadButton}
+          disabled={isGeneratingPdf}
+          style={{
+            opacity: isGeneratingPdf ? 0.6 : 1,
+            cursor: isGeneratingPdf ? 'not-allowed' : 'pointer'
+          }}
         >
           <svg className={styles.buttonIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
           </svg>
-          Download PDF
+          {isGeneratingPdf ? 'Generating PDF...' : 'Download PDF'}
         </button>
         
         <button
