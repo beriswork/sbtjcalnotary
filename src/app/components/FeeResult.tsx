@@ -16,6 +16,10 @@ export const FeeResult = ({ feeData }: { feeData: FeeData }) => {
       await generatePDF(feeData);
     } catch (error) {
       console.error('Error in handleDownloadPdf:', error);
+      // If error is about library not loading, provide helpful message
+      if (error instanceof Error && error.message.includes('failed to load')) {
+        alert('PDF library is still loading. Please wait a few seconds and try again, or refresh the page.');
+      }
     } finally {
       setIsGeneratingPdf(false);
     }

@@ -11,39 +11,49 @@ declare global {
 let lastGeneratedPdfBlob: Blob | null = null;
 
 // Helper function to wait for jsPDF to load
-const waitForJsPDF = async (maxRetries = 20): Promise<any> => {
+const waitForJsPDF = async (maxRetries = 30): Promise<any> => {
   for (let i = 0; i < maxRetries; i++) {
     // Check multiple possible locations where jsPDF might be exposed
     if (window.jsPDF) {
+      console.log('✅ Found jsPDF at window.jsPDF');
       return window.jsPDF;
     }
     if (window.jspdf?.jsPDF) {
+      console.log('✅ Found jsPDF at window.jspdf.jsPDF');
       return window.jspdf.jsPDF;
     }
     if ((window as any).jspdf) {
-      return (window as any).jspdf.jsPDF || (window as any).jspdf;
+      const jsPDF = (window as any).jspdf.jsPDF || (window as any).jspdf;
+      if (jsPDF) {
+        console.log('✅ Found jsPDF at window.jspdf (fallback)');
+        return jsPDF;
+      }
     }
     
-    console.log(`Waiting for jsPDF to load... attempt ${i + 1}/${maxRetries}`);
-    await new Promise(resolve => setTimeout(resolve, 200));
+    if (i === 0 || i % 5 === 0) {
+      console.log(`⏳ Waiting for jsPDF to load... attempt ${i + 1}/${maxRetries}`);
+    }
+    await new Promise(resolve => setTimeout(resolve, 300));
   }
   throw new Error('PDF generation library failed to load. Please refresh the page and try again.');
 };
 
 // Helper function to wait for autoTable plugin to load
-const waitForAutoTable = async (maxRetries = 20): Promise<boolean> => {
+const waitForAutoTable = async (maxRetries = 25): Promise<boolean> => {
   for (let i = 0; i < maxRetries; i++) {
     // Check if autoTable is available on jsPDF prototype
     const jsPDFClass = window.jsPDF || window.jspdf?.jsPDF;
     if (jsPDFClass && jsPDFClass.API && jsPDFClass.API.autoTable) {
-      console.log('✅ autoTable plugin is loaded');
+      console.log('✅ autoTable plugin is loaded and ready');
       return true;
     }
     
-    console.log(`Waiting for autoTable plugin... attempt ${i + 1}/${maxRetries}`);
-    await new Promise(resolve => setTimeout(resolve, 200));
+    if (i === 0 || i % 5 === 0) {
+      console.log(`⏳ Waiting for autoTable plugin... attempt ${i + 1}/${maxRetries}`);
+    }
+    await new Promise(resolve => setTimeout(resolve, 300));
   }
-  console.warn('⚠️ autoTable plugin not detected, PDF will be generated without table');
+  console.warn('⚠️ autoTable plugin not detected after waiting, using fallback text rendering');
   return false;
 };
 
