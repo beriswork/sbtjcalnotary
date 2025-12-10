@@ -217,25 +217,26 @@ export default function Dashboard() {
       />
       <Script
         id="jspdf"
-        strategy="afterInteractive"
+        strategy="beforeInteractive"
         src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         onLoad={() => {
           console.log('✅ jsPDF loaded successfully');
           console.log('jsPDF available at:', typeof window.jsPDF !== 'undefined' ? 'window.jsPDF' : 'window.jspdf');
+          
+          // Load autoTable after jsPDF is ready
+          const autoTableScript = document.createElement('script');
+          autoTableScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js';
+          autoTableScript.onload = () => {
+            console.log('✅ jsPDF AutoTable plugin loaded successfully');
+            console.log('autoTable available:', typeof (window.jsPDF as any)?.API?.autoTable !== 'undefined');
+          };
+          autoTableScript.onerror = (e) => {
+            console.error('❌ Failed to load jsPDF AutoTable:', e);
+          };
+          document.head.appendChild(autoTableScript);
         }}
         onError={(e) => {
           console.error('❌ Failed to load jsPDF:', e);
-        }}
-      />
-      <Script
-        id="jspdf-autotable"
-        strategy="afterInteractive"
-        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"
-        onLoad={() => {
-          console.log('✅ jsPDF AutoTable plugin loaded successfully');
-        }}
-        onError={(e) => {
-          console.error('❌ Failed to load jsPDF AutoTable:', e);
         }}
       />
       

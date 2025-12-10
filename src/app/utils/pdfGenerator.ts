@@ -30,6 +30,23 @@ const waitForJsPDF = async (maxRetries = 20): Promise<any> => {
   throw new Error('PDF generation library failed to load. Please refresh the page and try again.');
 };
 
+// Helper function to wait for autoTable plugin to load
+const waitForAutoTable = async (maxRetries = 20): Promise<boolean> => {
+  for (let i = 0; i < maxRetries; i++) {
+    // Check if autoTable is available on jsPDF prototype
+    const jsPDFClass = window.jsPDF || window.jspdf?.jsPDF;
+    if (jsPDFClass && jsPDFClass.API && jsPDFClass.API.autoTable) {
+      console.log('✅ autoTable plugin is loaded');
+      return true;
+    }
+    
+    console.log(`Waiting for autoTable plugin... attempt ${i + 1}/${maxRetries}`);
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+  console.warn('⚠️ autoTable plugin not detected, PDF will be generated without table');
+  return false;
+};
+
 export const generatePDF = async (feeData: FeeData) => {
   if (typeof window === 'undefined') {
     console.error('PDF generation is not available server-side');
@@ -43,6 +60,9 @@ export const generatePDF = async (feeData: FeeData) => {
     if (!jsPDFConstructor) {
       throw new Error('jsPDF constructor not found');
     }
+
+    // Wait for autoTable plugin
+    const hasAutoTable = await waitForAutoTable();
 
     const doc = new jsPDFConstructor();
 
@@ -64,40 +84,72 @@ export const generatePDF = async (feeData: FeeData) => {
     doc.setFontSize(20);
     doc.text(`Total Fees: $${feeData.totalFees.toFixed(2)}`, 20, 60);
 
-    // Fee Breakdown Table
-    const tableData = [
-      ['Fee Type', 'Amount'],
-      ['Stamp Fees', `$${feeData.stampFees.toFixed(2)}`],
-      ['Witness Fees', `$${feeData.witnessFees.toFixed(2)}`],
-      ['Additional Signer Fees', `$${feeData.addlSignerFees.toFixed(2)}`],
-      ['Travel Fees (Total)', `$${feeData.totalTravelFees.toFixed(2)}`],
-      ['- Distance Fees', `$${feeData.travelDistanceFees.toFixed(2)}`],
-      ['- Time Fees', `$${feeData.travelTimeFees.toFixed(2)}`],
-      ['Appointment Time Fees', `$${feeData.apptTimeFees.toFixed(2)}`],
-      ['Printing/Scanning Fees', `$${feeData.printingScanningFees.toFixed(2)}`]
-    ];
+    // Fee Breakdown
+    if (hasAutoTable && typeof doc.autoTable === 'function') {
+      // Use autoTable if available
+      const tableData = [
+        ['Fee Type', 'Amount'],
+        ['Stamp Fees', `$${feeData.stampFees.toFixed(2)}`],
+        ['Witness Fees', `$${feeData.witnessFees.toFixed(2)}`],
+        ['Additional Signer Fees', `$${feeData.addlSignerFees.toFixed(2)}`],
+        ['Travel Fees (Total)', `$${feeData.totalTravelFees.toFixed(2)}`],
+        ['  - Distance Fees', `$${feeData.travelDistanceFees.toFixed(2)}`],
+        ['  - Time Fees', `$${feeData.travelTimeFees.toFixed(2)}`],
+        ['Appointment Time Fees', `$${feeData.apptTimeFees.toFixed(2)}`],
+        ['Printing/Scanning Fees', `$${feeData.printingScanningFees.toFixed(2)}`]
+      ];
 
-    // @ts-ignore
-    doc.autoTable({
-      startY: 70,
-      head: [tableData[0]],
-      body: tableData.slice(1),
-      theme: 'grid',
-      headStyles: {
-        fillColor: primaryColor,
-        textColor: [255, 255, 255],
-        fontSize: 12,
-        fontStyle: 'bold'
-      },
-      alternateRowStyles: {
-        fillColor: accentColor
-      },
-      styles: {
-        fontSize: 10,
-        cellPadding: 8,
-        lineColor: [200, 200, 200]
-      }
-    });
+      doc.autoTable({
+        startY: 70,
+        head: [tableData[0]],
+        body: tableData.slice(1),
+        theme: 'grid',
+        headStyles: {
+          fillColor: primaryColor,
+          textColor: [255, 255, 255],
+          fontSize: 12,
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: accentColor
+        },
+        styles: {
+          fontSize: 10,
+          cellPadding: 8,
+          lineColor: [200, 200, 200]
+        }
+      });
+    } else {
+      // Fallback: Manual table rendering
+      console.log('Using fallback table rendering');
+      doc.setTextColor(...secondaryColor);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Fee Breakdown:', 20, 80);
+      
+      let yPos = 95;
+      const lineHeight = 10;
+      
+      const fees = [
+        ['Stamp Fees', feeData.stampFees],
+        ['Witness Fees', feeData.witnessFees],
+        ['Additional Signer Fees', feeData.addlSignerFees],
+        ['Travel Fees (Total)', feeData.totalTravelFees],
+        ['  - Distance Fees', feeData.travelDistanceFees],
+        ['  - Time Fees', feeData.travelTimeFees],
+        ['Appointment Time Fees', feeData.apptTimeFees],
+        ['Printing/Scanning Fees', feeData.printingScanningFees]
+      ];
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      
+      fees.forEach(([label, amount]) => {
+        doc.text(label as string, 25, yPos);
+        doc.text(`$${(amount as number).toFixed(2)}`, 170, yPos, { align: 'right' });
+        yPos += lineHeight;
+      });
+    }
 
     // Footer
     doc.setFontSize(10);
