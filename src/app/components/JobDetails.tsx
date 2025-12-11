@@ -2,6 +2,7 @@
 
 import { ChangeEvent } from 'react';
 import styles from '../page.module.css';
+import { Briefcase, FileText, Users, Clock, Printer } from 'lucide-react';
 
 interface JobDetailsProps {
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -16,79 +17,101 @@ interface JobDetailsProps {
 
 export const JobDetails = ({ onChange, values }: JobDetailsProps) => {
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    
-    console.log('Job Details input change:', {
-      id: e.target.id,
-      value
-    });
-    
     onChange(e);
   };
 
   return (
     <div className={styles.calculatorSection}>
-      <h2>Job Details</h2>
-      <label>
-        # of Stamps
-        <input
-          type="number"
-          id="numStamps"
-          min="0"
-          value={values.numStamps === 0 ? '' : values.numStamps}
-          placeholder="Enter number"
-          onChange={handleInputChange}
-          className={styles.numberInput}
-        />
-      </label>
-      <label>
-        # of Witnesses Needed
-        <input
-          type="number"
-          id="numWitnesses"
-          min="0"
-          value={values.numWitnesses === 0 ? '' : values.numWitnesses}
-          placeholder="Enter number"
-          onChange={handleInputChange}
-          className={styles.numberInput}
-        />
-      </label>
-      <label>
-        # of Add'l Signers
-        <input
-          type="number"
-          id="numAddlSigners"
-          min="0"
-          value={values.numAddlSigners === 0 ? '' : values.numAddlSigners}
-          placeholder="Enter number"
-          onChange={handleInputChange}
-          className={styles.numberInput}
-        />
-      </label>
-      <label htmlFor="apptTime">
-        Appt Time/Expertise (minutes)
-        <input
-          type="number"
-          id="apptTime"
-          min="0"
-          value={values.apptTime === 0 ? '' : values.apptTime}
-          placeholder="Enter time"
-          onChange={handleInputChange}
-          className={styles.numberInput}
-        />
-      </label>
-      <label>
-        # of Prints and Scans
-        <input
-          type="number"
-          id="numPrintScans"
-          min="0"
-          value={values.numPrintScans === 0 ? '' : values.numPrintScans}
-          placeholder="Enter number"
-          onChange={handleInputChange}
-          className={styles.numberInput}
-        />
-      </label>
+      <div className={styles.sectionHeader}>
+        <h2>
+          <Briefcase className={styles.sectionIcon} />
+          Job Specifics
+        </h2>
+      </div>
+      
+      <div className={styles.scrollableContent}>
+        <div className="grid gap-4">
+          <div className={styles.inputGroup}>
+            <label htmlFor="numStamps" className={styles.label}>Number of Stamps</label>
+            <div className={styles.inputWrapper}>
+              <input
+                type="number"
+                id="numStamps"
+                min="0"
+                value={values.numStamps === 0 ? '' : values.numStamps}
+                placeholder="e.g. 1"
+                onChange={handleInputChange}
+                className={styles.numberInput}
+              />
+              <FileText className={styles.inputIcon} />
+            </div>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="numWitnesses" className={styles.label}>Witnesses Needed</label>
+            <div className={styles.inputWrapper}>
+              <input
+                type="number"
+                id="numWitnesses"
+                min="0"
+                value={values.numWitnesses === 0 ? '' : values.numWitnesses}
+                placeholder="e.g. 0"
+                onChange={handleInputChange}
+                className={styles.numberInput}
+              />
+              <Users className={styles.inputIcon} />
+            </div>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="numAddlSigners" className={styles.label}>Additional Signers</label>
+            <div className={styles.inputWrapper}>
+              <input
+                type="number"
+                id="numAddlSigners"
+                min="0"
+                value={values.numAddlSigners === 0 ? '' : values.numAddlSigners}
+                placeholder="e.g. 0"
+                onChange={handleInputChange}
+                className={styles.numberInput}
+              />
+              <Users className={styles.inputIcon} />
+            </div>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="apptTime" className={styles.label}>Appointment Time (min)</label>
+            <div className={styles.inputWrapper}>
+              <input
+                type="number"
+                id="apptTime"
+                min="0"
+                value={values.apptTime === 0 ? '' : values.apptTime}
+                placeholder="e.g. 30"
+                onChange={handleInputChange}
+                className={styles.numberInput}
+              />
+              <Clock className={styles.inputIcon} />
+            </div>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="numPrintScans" className={styles.label}>Prints & Scans</label>
+            <div className={styles.inputWrapper}>
+              <input
+                type="number"
+                id="numPrintScans"
+                min="0"
+                value={values.numPrintScans === 0 ? '' : values.numPrintScans}
+                placeholder="e.g. 0"
+                onChange={handleInputChange}
+                className={styles.numberInput}
+              />
+              <Printer className={styles.inputIcon} />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
-}; 
+};

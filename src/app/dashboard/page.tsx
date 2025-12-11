@@ -201,8 +201,16 @@ export default function Dashboard() {
     return (
       <div className={styles.container}>
         <div className={styles.unauthorizedMessage}>
-          <h1>Access Denied</h1>
-          <p>Please <a href="/login" style={{ color: '#0052CC', textDecoration: 'underline' }}>log in</a> to access the calculator.</p>
+          <h1>Access Restricted</h1>
+          <p style={{ fontSize: '18px', marginBottom: '20px' }}>
+            Only Buyers of the Calculator can use it.
+          </p>
+          <p style={{ marginBottom: '10px' }}>
+            Click <a href="/login" style={{ color: '#0052CC', textDecoration: 'underline', fontWeight: '600' }}>Login</a> to view your account
+          </p>
+          <p style={{ color: '#666', fontSize: '14px' }}>
+            or use the sign up link to create an account
+          </p>
         </div>
       </div>
     );
@@ -253,9 +261,9 @@ export default function Dashboard() {
         </div>
 
         <div className={styles.banner}>
-          <span>Click here to calculate the fee immediately 👉</span>
-          <button onClick={calculateFees} className="primary-button">
-            CALCULATE
+          <span className={styles.bannerText}>Ready to see the total?</span>
+          <button onClick={calculateFees} className={styles.primaryButton}>
+            CALCULATE FEES
           </button>
         </div>
 
